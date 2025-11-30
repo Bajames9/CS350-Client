@@ -39,15 +39,35 @@ class _TCPClient:
 
 
     def listen(self):
-        """Continuously wait for messages from the server."""
+
+
+        buffer = ""
+
         while self.connected:
             try:
-                data = self.socket.recv(1024)
 
-                if data != "":
-                    text = data.decode().strip("\x1e")
-                    json_obj = json.loads(text)
-                    self.commandQueue.append(json_obj)
+
+                chunk = self.socket.recv(4096)
+
+                if not chunk:
+                    self.connected = False
+                    break
+
+                buffer += chunk.decode()
+
+
+                while "\x1e" in buffer:
+                    msg, buffer = buffer.split("\x1e",1)
+
+                    if msg.strip() == "":
+                        continue
+
+                    try:
+                        json_obj = json.loads(msg)
+                        self.commandQueue.append(json_obj)
+                    except json.JSONDecodeError:
+                        print("BAD JSON:", msg)
+
 
                 if self.commandQueue:  # non-empty
                     nextCMD = self.commandQueue[0]
