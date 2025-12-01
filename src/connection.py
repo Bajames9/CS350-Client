@@ -73,7 +73,6 @@ class _TCPClient:
                     nextCMD = self.commandQueue[0]
 
                     if nextCMD["command"] == "update" and nextCMD["chat"] == user.activeChat:
-                        print("update")
                         user.needsUpdate = True
                         self.commandQueue.popleft()
 
@@ -91,7 +90,6 @@ class _TCPClient:
 
     async def login(self, username):
 
-        print("login")
 
         if not self.connected:
             return False
@@ -120,7 +118,6 @@ class _TCPClient:
 
     async def getAllMsgFromChat(self, username):
 
-        print("getAllMsg")
 
         if not self.connected:
             return False
@@ -147,7 +144,6 @@ class _TCPClient:
 
     async def createChat(self, name):
 
-        print("createChat")
 
         if not self.connected:
             return False
@@ -173,7 +169,6 @@ class _TCPClient:
 
     async def joinChat(self, chatName):
 
-        print("joinChat")
 
         if not self.connected:
             return False
@@ -199,7 +194,6 @@ class _TCPClient:
 
     async def getAllChatNames(self):
 
-        print("getAllChatNames")
 
         if not self.connected:
             return False
@@ -223,7 +217,6 @@ class _TCPClient:
 
     async def Chat(self, recipient, msg):
 
-        print("Chat")
 
         if not self.connected:
             return False

@@ -8,7 +8,7 @@ class _user:
             self.activeChat = ""
             self.needsUpdate = True
             self.priorChats = []
-    
+            self.currentTyping = ""
 
 
     def setUpdate(self, value:bool):

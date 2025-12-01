@@ -1,1 +1,2 @@
 nicegui
+prompt_toolkit>=3.0
