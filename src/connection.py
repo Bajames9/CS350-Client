@@ -7,10 +7,11 @@ from queue import Queue
 
 from userContext import user
 
-
+#Main Client Code handles Server Connection
 
 class _TCPClient:
 
+    # stores info for later use sets up connection
     def __init__(self, host='localhost', port=2317):
         if not hasattr(self, "initialized"):
             self.host = host
@@ -20,6 +21,7 @@ class _TCPClient:
             self.initialized = True
             self.commandQueue = deque()
 
+    # connects to server if server is not up just loops tell connection is made
     def connect(self):
 
         while not self.connected:
@@ -37,25 +39,27 @@ class _TCPClient:
 
                   print("Connection failed:", e)
 
-
+    # used to listen for msgs from server adds them to queue
     def listen(self):
 
-
+        # buffer stores msgs from server so dont rn into length limits
         buffer = ""
 
         while self.connected:
             try:
 
-
+                # gets chunk of data from server
                 chunk = self.socket.recv(4096)
 
+                #breaks connection if not getting data
                 if not chunk:
                     self.connected = False
                     break
 
+                # adds chunk to buffer
                 buffer += chunk.decode()
 
-
+                # splits buffer by escape character to identify individual commands
                 while "\x1e" in buffer:
                     msg, buffer = buffer.split("\x1e",1)
 
@@ -64,11 +68,12 @@ class _TCPClient:
 
                     try:
                         json_obj = json.loads(msg)
+                        # adds command to queue
                         self.commandQueue.append(json_obj)
                     except json.JSONDecodeError:
                         print("BAD JSON:", msg)
 
-
+                # checks if command is update msgs
                 if self.commandQueue:  # non-empty
                     nextCMD = self.commandQueue[0]
 
@@ -88,6 +93,7 @@ class _TCPClient:
 
 
 
+    # runs login cmd
     async def login(self, username):
 
 
@@ -116,6 +122,7 @@ class _TCPClient:
             return False
 
 
+    # runs get all msg command
     async def getAllMsgFromChat(self, username):
 
 
@@ -214,6 +221,28 @@ class _TCPClient:
         except Exception as e:
             print("Send Error:", e)
             return False
+
+    async def Quit(self):
+        if not self.connected:
+            return
+
+        try:
+            json_obj = {
+                "command": "quit"
+            }
+            self.socket.sendall(f"{json.dumps(json_obj)}\x1e".encode())
+
+            while True:
+                if self.commandQueue:  # non-empty
+                    data = self.commandQueue[0]
+                    if data["command"] == "quit":
+                        print("Disconnected from server.")
+                    return data
+
+
+        except Exception as e:
+            print("Error quitting:", e)
+
 
     async def Chat(self, recipient, msg):
 

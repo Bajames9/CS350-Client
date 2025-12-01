@@ -8,9 +8,13 @@ from chat import chat
 from connection import client
 import socket
 
+
+# connects to server
 client.connect()
 
 
+
+# route for login page of ui
 @ui.page('/')
 async def index_page(client: Client):
     await client.connected()
@@ -20,8 +24,10 @@ async def index_page(client: Client):
 
     login()
 
-@ui.page('/test')
-async def test_page(client: Client):
+
+# route for main chat page of ui
+@ui.page('/home')
+async def home_page(client: Client):
     await client.connected()
     client.layout.classes(remove='q-pa-lg').classes('p-0 m-0') 
     client.content.classes(remove='q-pa-md').classes('p-0 m-0')
@@ -33,7 +39,7 @@ async def test_page(client: Client):
 
 
 
-
+# insures client uses a new port if one is already being used for ui display
 def find_free_port(start=8000, end=8100):
     for port in range(start, end):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

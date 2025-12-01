@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 echo.
 echo === Starting client ===
-python src/app.py
+python src/appWeb.py
 
 echo.
 pause

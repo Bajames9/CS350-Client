@@ -7,6 +7,10 @@ import time
 message_col: ui.column = None
 chat_scroll_area: ScrollArea = None
 
+#Main Chat page
+
+
+# used to send chat msgs
 async def handleInput(e):
     
     input_value = e.sender.value
@@ -15,6 +19,8 @@ async def handleInput(e):
     e.sender.set_value('')
     e.sender.update()
 
+
+# used to join Chat groups
 async def handleJoin(e):
     
     input_value = e.sender.value
@@ -30,6 +36,7 @@ async def handleJoin(e):
     e.sender.update()
 
 
+#used To create Chat groups
 async def handleCreate(e):
     
     input_value = e.sender.value
@@ -45,10 +52,14 @@ async def handleCreate(e):
     e.sender.set_value('')
     e.sender.update()
 
+
+#main display code for chat page
 async def chat():
+    # makes sure user is logged in
     if user.username == "":
         ui.navigate.to("/")
 
+    # outer divs
     with ui.row().classes('w-full h-screen p-0 m-0 gap-0 overflow-hidden'):
         with ui.element('div').classes(
             'flex w-full h-full bg-[radial-gradient(circle_at_bottom_right,_#415A77,_#1B263B,_#0D1B2A)]'
@@ -56,21 +67,21 @@ async def chat():
             
             with ui.element('div').classes('flex flex-row w-full h-7/8'):
     
-                # Left column (dropdown + inputs)
+                # Left column
                 with ui.element('div').classes('flex flex-col gap-4 p-4 w-3/8 h-full'):
                     global chat_dropdown_container
                     chat_dropdown_container = ui.column().classes('p-0 m-0 flex-1 overflow-auto')  # this fills available vertical space
                     
                     await getChats()
                     
-                    # Input section stays at bottom
+                    # Input section
                     with ui.element('div').classes('flex flex-col gap-2'):
                         join_input = ui.input("Join chat").classes('bg-[#778da9] rounded p-2')
                         join_input.on('keydown.enter', handleJoin)
                         create_input = ui.input("Create chat").classes('bg-[#778da9] rounded p-2')
                         create_input.on('keydown.enter', handleCreate)
 
-                # Right column (chat scroll area)
+                # Right column
                 global chat_scroll_area
                 with ui.scroll_area().classes('flex-1 w-5/8 h-full border') as chat_scroll_area:
                     global message_col
@@ -83,7 +94,7 @@ async def chat():
 
               
 
-                # Chat input fixed to bottom
+                # Chat input
                 chat_input = ui.input(label='Chat') \
                     .props('input-class="text-white text-2xl"') \
                     .classes('w-full bg-[#778da9] rounded-2xl p-2')
@@ -94,68 +105,74 @@ async def chat():
 
 chat_dropdown: ui.dropdown_button = None  # global
 
+
+# used to getActive Chats for dropdown
 async def getChats():
-    global chat_dropdown_container # Need access to the container
+    global chat_dropdown_container
     if chat_dropdown_container is None:
-        # This shouldn't happen if chat() runs first, but is a safe guard.
         print("Error: chat_dropdown_container not initialized.")
         return
 
     chats = await client.getAllChatNames()
     user.updatePrior(chats["chats"])
 
-    # Clear the container instead of deleting the element
-    # This removes all elements from the container's slot cleanly.
+
     chat_dropdown_container.clear()
     
-    # 3. Build the new dropdown inside the cleared container
+
+    # sets chat dropdown with data
     with chat_dropdown_container:
         with ui.dropdown_button('active chats', auto_close=True) as new_chat_dropdown:
             for chat_id in user.priorChats:
-                # The dropdown variable is now local to this function scope
                 ui.item(chat_id, on_click=lambda id=chat_id: setChat(id))
                 
     chat_dropdown_container.update()
 
         
-        
-def setChat(chatId):
+
+# sets the active chat
+async def setChat(chatId):
+
+
+    if user.activeChat:
+        leaveMsg = f"/chat ### Has Left The Chat ###"
+        await sendChatMsg(leaveMsg)
+
     user.setChat(chatId)
     print(user.activeChat)
 
 
-def userBox(user: str):
-    with ui.element('div').classes(
+    joinMsg = f"/chat ### Has Joined The Chat ###"
+    await sendChatMsg(joinMsg)
 
-            'flex justify-start items-center w-[130%] h-15 transform -translate-x-3 '
-            'transition-all duration-500 group-hover:w-[200%]'
-        ):
-            with ui.element('div').classes(
-          
-                'flex flex-row justify-center items-center w-15 h-15 bg-amber-100 rounded-2xl '
-                'transition-all group-hover:w-full duration-500 group-hover:justify-start pl-4'
-            ):
-                ui.label(user[0].upper()).classes(
-                    'text-4xl transition-all duration-100 group-hover:opacity-0 absolute'
-                )
-                ui.label(user).classes(
-                    'text-2xl font-semibold opacity-0 transition-all group-hover:opacity-100 ml-10'
-                )
 
+# sends a chat msg used for server leave and join
+async def sendChatMsg(user_input):
+    if user.activeChat:
+        parts, msg = user_input.split(" ", 1)
+        response = await client.Chat(user.activeChat, msg)
+
+
+
+
+# used to display msgs
 def chatBox(sender: str, text: str):
-    """
-    Creates a single message bubble within the current UI context.
-    The message_col context must be active when this is called.
-    """
+
+
+    fromUser = sender
     if sender == 'me':
         alignment_classes = 'self-end bg-[#b8c4d3]'
+        fromUser = user.username
+
+
     else:
         alignment_classes = 'self-start bg-amber-100'
-    
-    # Building the element inside the active context (which should be message_col)
-    with ui.element('div').classes(f'flex flex-col h-fit p-2 rounded-lg m-1 {alignment_classes} max-w-[80%] whitespace-normal break-all'):
-        ui.label(text).classes('p-0 m-0')
 
+    with ui.element('div').classes(f'flex flex-col h-fit p-2 rounded-lg m-1 {alignment_classes} max-w-[80%] whitespace-normal break-all'):
+        ui.label(f"{fromUser}# {text}").classes('p-0 m-0')
+
+
+# used to update msgs
 async def update_msg_display():
 
     if user.activeChat != "" and user.needsUpdate:
@@ -165,23 +182,19 @@ async def update_msg_display():
         if messages_json["success"]:
             messages = messages_json["data"]
 
-            # Use a 'with' block to ensure all subsequent elements are built 
-            # within the message_col container.
-            with message_col:
-                # Clear previous messages so we don't duplicate (Issue 2 Fix)
-                message_col.clear() 
 
-                # Add each message to the column (Issue 1 Fix)
+            with message_col:
+                message_col.clear()
+
                 for msg in messages:
                     sender = msg['sender']
                     text = msg['msg']
 
-                    if sender == user.username:  # assuming user.username is your current user
+                    if sender == user.username:
                         chatBox('me', text)
                     else:
                         chatBox(sender, text)
 
-            # Important: Update the column itself to reflect the cleared/added messages
             message_col.update()
        
             

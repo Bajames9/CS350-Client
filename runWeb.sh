@@ -16,5 +16,5 @@ pip install -r requirements.txt
 
 echo
 echo "=== Starting client ==="
-python3 src/app.py
+python3 src/appWeb.py
 echo

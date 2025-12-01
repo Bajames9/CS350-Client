@@ -1,5 +1,7 @@
 from collections import deque
 
+
+#user context stores info about user
 class _user:
 
     def __init__(self):
