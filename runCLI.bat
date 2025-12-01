@@ -1,6 +1,7 @@
 @echo off
 echo === Setting up Python virtual environment ===
 
+
 REM Create venv if it doesn't exist
 if not exist venv (
     echo Creating virtual environment...

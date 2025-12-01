@@ -14,6 +14,7 @@ client.connect()
 
 
 
+
 # route for login page of ui
 @ui.page('/')
 async def index_page(client: Client):

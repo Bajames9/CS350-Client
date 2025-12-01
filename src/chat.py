@@ -10,6 +10,7 @@ chat_scroll_area: ScrollArea = None
 #Main Chat page
 
 
+
 # used to send chat msgs
 async def handleInput(e):
     

@@ -140,6 +140,7 @@ async def mainCLI():
 
 
 
+
 # used to set teh active chat and send Join and Leave msgs to chats
 async def setChat(chat):
     #gets msgs for chat being joined
